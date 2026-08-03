@@ -19,7 +19,10 @@ allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173").spl
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    # No cookies are used - identity travels via the X-User-Id header, not
+    # credentials - so allow_credentials stays False, which also means
+    # ALLOWED_ORIGINS can safely include "*" if ever needed.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
