@@ -1,17 +1,56 @@
-# Chitfund
+How a chit fund works
+     
+  A chit fund is a rotating savings and credit association (ROSCA) — a traditional group savings and lending system, especially common in India,
+  where a fixed group of people pool money together on a regular schedule, and one member gets access to a lump sum each cycle.
 
-A digital chit fund (rotating savings and credit association) built for **RLC Hacks 2026** — Open Track.
+  The basic mechanics
 
-A chit fund is a group savings mechanism common across South Asia: a fixed group of members
-contributes a fixed amount every cycle into a shared pool. Each cycle, exactly one member takes
-the pooled payout via a competitive auction — the member willing to accept the *smallest* payout
-wins it early, and the difference (the "discount") is split as a dividend among everyone else.
-This repeats until every member has been paid out exactly once.
+  1. Form the group. Say 10 people agree to a chit fund: each contributes ₹1,000 every month, for 10 months. Total pool value = ₹10,000/month.
+  2. Every cycle, everyone pays in. Every member pays their fixed ₹1,000 each month — no exceptions, whether or not they've already received a
+  payout.
+  3. One member gets the pot each cycle. Each month, exactly one member receives the pooled ₹10,000. Over the full 10 months, every member gets
+  exactly one payout — that's what makes it "rotating."
+  4. Who gets it, and how, varies by model:
+    - Lottery/rotation: pure luck or a pre-agreed order.
+    - Auction/bidding (the classic "chit fund" mechanism, and what we built): members who haven't won yet bid for how much less than the full pot
+  they'd accept to take the payout now instead of waiting. Whoever bids lowest wins — e.g., if the pot is ₹10,000 and someone bids ₹9,000, they get
+  ₹9,000 now. The ₹1,000 "discount" they gave up gets split as a dividend among the other members, effectively lowering their next contribution's
+  real cost.
+  5. Repeat until everyone's won once. After 10 cycles, everyone has contributed ₹10,000 total and received exactly one ₹10,000-ish payout — the fund
+  closes.
 
-Chitfund digitizes this: pools, simulated contributions, a real bidding auction each cycle, and a
-transparent, explainable **trust score** per member so organizers can see who's reliable before the
-next cycle opens. Each pool has a **head** (the creator) who approves join requests from members
-discovering the pool publicly, alongside the existing invite-code path for direct joins.
+  Why people use it
+
+  - Early access to a lump sum without a bank loan — useful for a wedding, medical bill, or business need. Winning early is effectively borrowing at
+  a "discount rate" you set yourself via your bid.
+  - Forced savings for members who win later — the discipline of a recurring commitment.
+  - Community trust-based credit — historically used where formal banking access is limited, since it runs on social trust rather than credit scores.
+
+  The risk it carries — and why "trust" matters
+
+  The entire system depends on every member continuing to pay in after they've already received their payout. Someone who wins early and then stops
+  contributing (defaults) leaves a hole the rest of the group has to absorb. This is exactly the gap our app's trust score targets — it's a
+  transparent, explainable measure of how reliably a member has paid on time, so an organizer can see risk before letting someone into a pool, not
+  after a default has already happened. That's the product's real differentiator: digitizing a centuries-old trust-based system with a data-backed
+  (but still human-readable) trust signal, rather than a black-box credit score.
+
+  How this maps onto what we built
+
+  ┌──────────────────────────────────────┬─────────────────────────────────────────────────┐
+  │          Chit fund concept           │                   In the app                    │
+  ├──────────────────────────────────────┼─────────────────────────────────────────────────┤
+  │ Group + fixed contribution           │ Pool (name, contribution amount, member cap)    │
+  ├──────────────────────────────────────┼─────────────────────────────────────────────────┤
+  │ Monthly payment                      │ contribute endpoint → LedgerEntry               │
+  ├──────────────────────────────────────┼─────────────────────────────────────────────────┤
+  │ Auction round                        │ Cycle in bidding_open status + Bid records      │
+  ├──────────────────────────────────────┼─────────────────────────────────────────────────┤
+  │ Lowest bid wins, discount → dividend │ bidding_engine.resolve_cycle_bids()             │
+  ├──────────────────────────────────────┼─────────────────────────────────────────────────┤
+  │ "Already won, can't win again"       │ Membership.has_won                              │
+  ├──────────────────────────────────────┼─────────────────────────────────────────────────┤
+  │ Reliability reputation               │ trust_score.py — Laplace-smoothed on-time ratio │
+  └──────────────────────────────────────┴─────────────────────────────────────────────────┘
 
 ## Why a rule-based trust score, not a black-box model
 
