@@ -21,6 +21,13 @@ export function clearStoredUserId(): void {
 
 export class ApiError extends Error {}
 
+// In dev, '/api' is rewritten to the local backend by Vite's server proxy
+// (see vite.config.ts) - there's no such proxy in a production static build,
+// so VITE_API_BASE_URL must be set at build time to the deployed backend's
+// root URL (no /api suffix - the backend mounts routes at root, e.g.
+// /auth/login, not /api/auth/login).
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const userId = getStoredUserId()
   const headers: Record<string, string> = {
@@ -31,7 +38,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers['X-User-Id'] = String(userId)
   }
 
-  const res = await fetch(`/api${path}`, { ...options, headers })
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new ApiError(body.detail ?? `Request failed with status ${res.status}`)

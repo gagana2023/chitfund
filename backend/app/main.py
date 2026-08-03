@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,9 +11,14 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Chitfund API")
 
+# ALLOWED_ORIGINS: comma-separated list of frontend origins, e.g.
+# "https://chitfund.vercel.app,http://localhost:5173". Falls back to the
+# local dev origin so `uvicorn app.main:app` keeps working out of the box.
+allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
